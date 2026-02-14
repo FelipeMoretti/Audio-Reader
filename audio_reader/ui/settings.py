@@ -50,6 +50,7 @@ def _quality_options() -> dict[str, str]:
         t("quality_balanced"): "base",
         t("quality_accurate"): "small",
         t("quality_very_accurate"): "medium",
+        t("quality_best"): "large-v3-turbo",
     }
 
 
