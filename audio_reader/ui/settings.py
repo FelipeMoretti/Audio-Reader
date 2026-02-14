@@ -7,6 +7,7 @@ from pathlib import Path
 
 import keyboard
 
+from audio_reader import __version__
 from audio_reader.config import load_config, save_config, CONFIG_DIR
 from audio_reader.i18n import t
 
@@ -71,12 +72,10 @@ def _section_header(parent, text: str) -> None:
     container = ctk.CTkFrame(parent, fg_color=_HEADER_BLUE, corner_radius=6, height=38)
     container.pack(fill="x", pady=(12, 5))
     container.pack_propagate(False)
-    accent = ctk.CTkFrame(container, fg_color=_HEADER_BLUE, width=4, corner_radius=0)
-    accent.pack(side="left", fill="y")
     ctk.CTkLabel(
         container, text=text, text_color="white",
         font=("Segoe UI", 15, "bold"), fg_color="transparent",
-    ).pack(side="left", padx=(10, 0))
+    ).pack(side="left", padx=(14, 0))
 
 
 def _dropdown(parent, variable, values) -> None:
@@ -114,7 +113,7 @@ def open_settings(app) -> None:
     device_to_label = {v: k for k, v in device_opts.items()}
 
     window = ctk.CTk()
-    window.title("Audio Reader")
+    window.title(f"Audio Reader v{__version__}")
     window.geometry("550x640")
     window.resizable(False, False)
     ctk.set_appearance_mode("dark")
@@ -150,6 +149,25 @@ def open_settings(app) -> None:
         command=lambda: _quit(app, window),
     ).pack(side="right")
 
+    state_label = ctk.CTkLabel(
+        btn_frame,
+        text=app.state.value.replace("_", " ").title(),
+        text_color=_NOTE_COLOR,
+        font=("Segoe UI", 13),
+    )
+    state_label.pack(expand=True)
+
+    def _update_state_label(state):
+        try:
+            if window.winfo_exists():
+                window.after(0, lambda s=state: state_label.configure(
+                    text=s.value.replace("_", " ").title()
+                ))
+        except Exception:
+            pass
+
+    app.add_state_callback(_update_state_label)
+
     # ── Separator ──
     ctk.CTkFrame(frame, height=2, fg_color=_SEPARATOR).pack(fill="x", pady=(5, 10))
 
@@ -175,14 +193,29 @@ def open_settings(app) -> None:
     _section_header(frame, t("hotkey"))
     hotkey_var = ctk.StringVar(value=config.get("hotkey", "ctrl+alt"))
 
+    hotkey_frame = ctk.CTkFrame(frame, fg_color="transparent")
+    hotkey_frame.pack(fill="x", pady=(0, 2))
+
     hotkey_btn = ctk.CTkButton(
-        frame, text=_format_hotkey(hotkey_var.get()),
+        hotkey_frame, text=_format_hotkey(hotkey_var.get()),
         fg_color=_DROPDOWN_BG, hover_color=_DROPDOWN_HOVER,
         border_width=1, border_color=_BTN_BORDER,
         corner_radius=6, height=40,
         font=("Segoe UI", 13),
     )
-    hotkey_btn.pack(fill="x", pady=(0, 2))
+    hotkey_btn.pack(side="left", fill="x", expand=True)
+
+    def _reset_hotkey():
+        hotkey_var.set("ctrl+alt")
+        hotkey_btn.configure(text=_format_hotkey("ctrl+alt"))
+
+    ctk.CTkButton(
+        hotkey_frame, text="\u21BA", width=40, height=40,
+        fg_color=_BTN_BG, hover_color=_BTN_HOVER,
+        border_width=1, border_color=_BTN_BORDER,
+        corner_radius=6, font=("Segoe UI", 16),
+        command=_reset_hotkey,
+    ).pack(side="left", padx=(6, 0))
 
     def _capture_hotkey():
         hotkey_btn.configure(text=t("press_hotkey"), state="disabled")
@@ -255,11 +288,16 @@ def open_settings(app) -> None:
         command=on_save,
     ).pack(pady=(10, 15))
 
-    # ── Note ──
+    # ── Note + version ──
     ctk.CTkLabel(
         frame, text=t("note_restart"),
         text_color=_NOTE_COLOR, font=("Segoe UI", 11),
     ).pack(anchor="w")
+
+    ctk.CTkLabel(
+        frame, text=f"v{__version__}",
+        text_color=_NOTE_COLOR, font=("Segoe UI", 11),
+    ).pack(anchor="e")
 
     window.mainloop()
 

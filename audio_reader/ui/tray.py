@@ -5,6 +5,7 @@ from pathlib import Path
 from PIL import Image
 import pystray
 
+from audio_reader import __version__
 from audio_reader.app import AppState
 from audio_reader.i18n import t
 
@@ -37,7 +38,7 @@ class SystemTray:
 
     def _build_menu(self) -> pystray.Menu:
         return pystray.Menu(
-            pystray.MenuItem(t("tray_title"), None, enabled=False),
+            pystray.MenuItem(f"{t('tray_title')} v{__version__}", None, enabled=False),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem(t("tray_settings"), self._on_settings, default=True),
             pystray.MenuItem(t("tray_quit"), self._on_quit),
