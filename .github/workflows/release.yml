@@ -1,0 +1,31 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Build exe + installer
+        run: python build.py
+
+      - name: Upload installer to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/AudioReader_v*_Setup.exe
